@@ -23,6 +23,7 @@ def profile_screen():
         st.subheader("Profile Information")
         st.write(f"**Name:** {profile_data['name']}")
         st.write(f"**Email:** {profile_data['email']}")
+        st.write(f"**Age:** {profile_data['age']}")
         st.write(f"**User ID:** {profile_data['id']}")
     else:
         st.error("Failed to load profile information")

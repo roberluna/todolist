@@ -26,11 +26,13 @@ class UserRegister(BaseModel):
     name: str
     email: EmailStr
     password: str = Field(..., min_length=5, description="Password must be at least 5 characters long")
+    age: int = Field(..., ge=1, le=150, description="Age must be between 1 and 150")
 
 class UserResponse(BaseModel):
     id: str
     name: str
     email: str
+    age: int
 
 class Token(BaseModel):
     access_token: str
@@ -90,10 +92,11 @@ def register(user: UserRegister):
         "id": user_id,
         "name": user.name,
         "email": user.email,
-        "password": get_password_hash(user.password)
+        "password": get_password_hash(user.password),
+        "age": user.age
     }
     save_db(db)
-    return UserResponse(id=user_id, name=user.name, email=user.email)
+    return UserResponse(id=user_id, name=user.name, email=user.email, age=user.age)
 
 @router.post("/login", response_model=Token)
 def login(user: UserLogin):
@@ -111,4 +114,4 @@ def get_profile(current_user_email: str = Depends(verify_token)):
     user_data = next((u for u in db["users"].values() if u["email"] == current_user_email), None)
     if not user_data:
         raise HTTPException(status_code=404, detail="User not found")
-    return UserResponse(id=user_data["id"], name=user_data["name"], email=user_data["email"])
+    return UserResponse(id=user_data["id"], name=user_data["name"], email=user_data["email"], age=user_data["age"])
