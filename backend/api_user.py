@@ -47,9 +47,19 @@ def save_db(data):
         json.dump(data, f, indent=2)
 
 def verify_password(plain_password, hashed_password):
+    # Truncate password to 72 bytes to match bcrypt limitation
+    if len(plain_password.encode('utf-8')) > 72:
+        plain_password = plain_password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
     return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password):
+    # Truncate password to 72 bytes to avoid bcrypt error
+    password_bytes = password.encode('utf-8')
+    if len(password_bytes) > 72:
+        password_bytes = password_bytes[:72]
+
+    # Decode back to string for passlib
+    password = password_bytes.decode('utf-8', errors='ignore')
     return pwd_context.hash(password)
 
 def create_access_token(data: dict):
@@ -87,10 +97,7 @@ def register(user: UserRegister):
 
 @router.post("/login", response_model=Token)
 def login(user: UserLogin):
-    print("hola")
     db = load_db()
-    print(f"Attempting to log in user: {user.email}")
-    
     user_data = next((u for u in db["users"].values() if u["email"] == user.email), None)
     if not user_data or not verify_password(user.password, user_data["password"]):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
